@@ -1,6 +1,7 @@
 from keras import Sequential, losses, models, optimizers
 from keras.activations import relu, softmax
-from keras.layers import Dense, Dropout, Input, Conv2D, BatchNormalization, Activation, MaxPool2D, Flatten
+from keras.layers import Input, BatchNormalization, Activation, Flatten, Dense, Dropout
+from keras.layers import Conv1D, Conv2D, MaxPool1D, MaxPool2D, GlobalAveragePooling1D
 from keras.callbacks import EarlyStopping
 
 
@@ -50,5 +51,79 @@ def get_mfcc_model(input_shape, num_classes, learning_rate=0.001):
 
     # Unmark the command below to print the model summary
     # model.summary()
+
+    return model
+
+
+def get_mel_spec_model(input_shape, num_classes, learning_rate=0.001):
+    _name = 'mel_spec'
+    model = Sequential(name=_name)
+    model.add(Input(shape=input_shape))
+
+    model.add(Conv1D(8, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(Conv1D(8, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(MaxPool1D())
+
+    model.add(Conv1D(16, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(Conv1D(16, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(MaxPool1D())
+
+    model.add(Conv1D(32, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(Conv1D(32, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(MaxPool1D())
+
+    model.add(Conv1D(64, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(Conv1D(64, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(MaxPool1D())
+
+    model.add(Conv1D(128, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(Conv1D(128, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(MaxPool1D())
+
+    model.add(Conv1D(256, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(Conv1D(256, kernel_size=5, padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation(relu))
+    model.add(GlobalAveragePooling1D())
+
+    model.add(Dense(128))
+    model.add(Activation(relu))
+    model.add(Dropout(0.5))
+    model.add(Dense(64))
+    model.add(Activation(relu))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation=softmax))
+
+    model.compile(optimizer=optimizers.Adam(learning_rate=learning_rate),
+                  loss=losses.categorical_crossentropy,
+                  metrics=['accuracy'])
+
+    # Unmake the command below to save the model plot *READ WARNINGS*
+    _save_model_plot(model)
+
+    # Unmark the command below to print the model summary
+    model.summary()
 
     return model
