@@ -13,6 +13,10 @@ from mfcc_utils import power_to_db
 import config
 
 
+def get_plt():
+    return plt
+
+
 def plot_confusion_matrix(y_true, y_pred, labels, color_map='viridis'):
     """
     plots the confusion matrix
