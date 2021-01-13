@@ -1,4 +1,3 @@
-
 from keras import Sequential, losses, models, optimizers
 from keras.activations import relu, softmax
 from keras.layers import Dense, Dropout, Input, Conv2D, BatchNormalization, Activation, MaxPool2D, Flatten
