@@ -53,7 +53,7 @@ def _get_wav_files(dir_path):
     return files
 
 
-def process_feature(fs, max_len, feature_type=None):
+def process_feature(fs, max_len, feature_type=None, num_for_test=5):
     x_data, x_test, y_data, y_test = [], [], [], []
     for file in _get_wav_files(config.RECORDING_DIR):
         file_name = file.split('.')[0].split('_')
@@ -74,21 +74,28 @@ def process_feature(fs, max_len, feature_type=None):
             feature = numpy.pad(feature, ((0, 0), (0, max_len - feature.shape[1])))
         else:
             feature = feature[:, :max_len]
-        if int(index) < 5:
+        if int(index) < num_for_test:
             x_test.append(feature)
             y_test.append(feature_out)
         else:
             x_data.append(feature)
             y_data.append(feature_out)
 
-    x_data, x_test = numpy.expand_dims(numpy.array(x_data), axis=-1), numpy.expand_dims(numpy.array(x_test), axis=-1)
+    return numpy.array(x_data), numpy.array(x_test), numpy.array(y_data), numpy.array(y_test)
 
-    encoder = LabelEncoder()
-    encoder.fit(numpy.array(y_data))
 
-    y_data = to_categorical(encoder.transform(numpy.array(y_data)))
-    y_test = to_categorical(encoder.transform(numpy.array(y_test)))
+def expand_dim(x_data, x_test):
+    return numpy.expand_dims(numpy.array(x_data), axis=-1), numpy.expand_dims(numpy.array(x_test), axis=-1)
 
+
+def data_encoder_and_categorized(y_data, y_test, encoder=LabelEncoder()):
+    encoder.fit(y_data)
+    y_data = to_categorical(encoder.transform(y_data))
+    y_test = to_categorical(encoder.transform(y_test))
+    return y_data, y_test, encoder
+
+
+def train_valid_split(x_data, y_data, percent=1/9, shuffle=True):
     x_train, x_valid, y_train, y_valid = train_test_split(x_data, y_data,
-                                                          test_size=1 / 9, random_state=True, shuffle=True)
-    return x_train, y_train, x_valid, y_valid, x_test, y_test, encoder
+                                                          test_size=percent, random_state=True, shuffle=shuffle)
+    return x_train, x_valid, y_train, y_valid

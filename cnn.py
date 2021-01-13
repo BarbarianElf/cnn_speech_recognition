@@ -1,7 +1,7 @@
 from keras import Sequential, losses, models, optimizers
 from keras.activations import relu, softmax
 from keras.layers import Input, BatchNormalization, Activation, Flatten, Dense, Dropout
-from keras.layers import Conv1D, Conv2D, MaxPool1D, MaxPool2D, GlobalAveragePooling1D
+from keras.layers import Conv2D, MaxPool2D, GlobalMaxPooling2D
 from keras.callbacks import EarlyStopping
 
 
@@ -22,6 +22,12 @@ def get_early_stop(value_monitored='val_loss', min_delta=0.01, num_of_epochs=5):
 
 
 def get_mfcc_model(input_shape, num_classes, learning_rate=0.001):
+    """
+    CNN model architecture for MFCC speaker recognition
+    role model from the following article:
+    http://www.cs.tut.fi/~tuomasv/papers/ijcnn_paper_valenti_extended.pdf
+
+    """
     _name = 'mfcc'
     model = Sequential(name=_name)
     model.add(Input(shape=input_shape))
@@ -56,64 +62,39 @@ def get_mfcc_model(input_shape, num_classes, learning_rate=0.001):
 
 
 def get_mel_spec_model(input_shape, num_classes, learning_rate=0.001):
+    """
+    CNN model architecture for Mel-Spectrogram single word recognition
+    role model from the following article:
+    http://noiselab.ucsd.edu/ECE228_2019/Reports/Report38.pdf
+    """
     _name = 'mel_spec'
     model = Sequential(name=_name)
     model.add(Input(shape=input_shape))
+    model.add(BatchNormalization())
 
-    model.add(Conv1D(8, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
+    model.add(Conv2D(32, kernel_size=(5, 5)))
     model.add(Activation(relu))
-    model.add(Conv1D(8, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
+    model.add(Conv2D(32, kernel_size=(5, 5)))
     model.add(Activation(relu))
-    model.add(MaxPool1D())
+    model.add(MaxPool2D())
+    model.add(Dropout(0.1))
 
-    model.add(Conv1D(16, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
+    model.add(Conv2D(64, kernel_size=(3, 3)))
     model.add(Activation(relu))
-    model.add(Conv1D(16, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
+    model.add(Conv2D(64, kernel_size=(3, 3)))
     model.add(Activation(relu))
-    model.add(MaxPool1D())
+    model.add(MaxPool2D())
+    model.add(Dropout(0.1))
 
-    model.add(Conv1D(32, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
+    model.add(Conv2D(128, kernel_size=(3, 3)))
     model.add(Activation(relu))
-    model.add(Conv1D(32, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(MaxPool1D())
-
-    model.add(Conv1D(64, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(Conv1D(64, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(MaxPool1D())
-
-    model.add(Conv1D(128, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(Conv1D(128, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(MaxPool1D())
-
-    model.add(Conv1D(256, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(Conv1D(256, kernel_size=5, padding="same"))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(GlobalAveragePooling1D())
+    model.add(GlobalMaxPooling2D())
+    model.add(Dropout(0.1))
 
     model.add(Dense(128))
     model.add(Activation(relu))
-    model.add(Dropout(0.5))
-    model.add(Dense(64))
-    model.add(Activation(relu))
-    model.add(Dropout(0.5))
+    model.add(BatchNormalization())
+
     model.add(Dense(num_classes, activation=softmax))
 
     model.compile(optimizer=optimizers.Adam(learning_rate=learning_rate),
@@ -121,9 +102,43 @@ def get_mel_spec_model(input_shape, num_classes, learning_rate=0.001):
                   metrics=['accuracy'])
 
     # Unmake the command below to save the model plot *READ WARNINGS*
-    _save_model_plot(model)
+    # _save_model_plot(model)
 
     # Unmark the command below to print the model summary
-    model.summary()
+    # model.summary()
 
     return model
+
+# def get_mel_spec_model(input_shape, num_classes, learning_rate=0.001):
+#     _name = 'mel_spec'
+#     model = Sequential(name=_name)
+#     model.add(Input(shape=input_shape))
+#
+#     model.add(Conv2D(64, kernel_size=(5, 5)))
+#     model.add(BatchNormalization())
+#     model.add(Activation(relu))
+#     model.add(MaxPool2D(pool_size=(2, 4)))
+#
+#     model.add(Conv2D(64, kernel_size=(3, 3)))
+#     model.add(BatchNormalization())
+#     model.add(Activation(relu))
+#     model.add(MaxPool2D(pool_size=(2, 4)))
+#
+#     model.add(Flatten())
+#     model.add(Dense(32))
+#     model.add(Activation(relu))
+#     model.add(Dropout(0.2))
+#
+#     model.add(Dense(num_classes, activation=softmax))
+#
+#     model.compile(optimizer=optimizers.Adam(learning_rate=learning_rate),
+#                   loss=losses.categorical_crossentropy,
+#                   metrics=['accuracy'])
+#
+#     # Unmake the command below to save the model plot *READ WARNINGS*
+#     _save_model_plot(model)
+#
+#     # Unmark the command below to print the model summary
+#     model.summary()
+#
+#     return model
