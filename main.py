@@ -100,6 +100,8 @@ def train_and_predict(feature_type, batch_size):
 
 if __name__ == "__main__":
     plt = data_utils.get_plt()
+    os.makedirs("saved_data", exist_ok=True)
+    os.makedirs("saved_model", exist_ok=True)
     os.makedirs("results", exist_ok=True)
 
     # PLOTS FOR MANY BATCH SIZE
