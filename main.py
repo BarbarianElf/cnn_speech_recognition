@@ -80,7 +80,7 @@ def train_and_predict(feature_type, batch_size):
     try:
         model = load_model(f"saved_model/{feature_type}")
     except IOError:
-        model = cnn.get_mfcc_model(in_train.shape[1:], num_classes, learning_rate=0.001)
+        model = cnn.get_model(feature_type, in_train.shape[1:], num_classes)
         history = model.fit(in_train, out_train,
                             batch_size=batch_size,
                             epochs=100,
@@ -89,12 +89,12 @@ def train_and_predict(feature_type, batch_size):
                             use_multiprocessing=True,
                             workers=6)
         data_utils.plot_loss(history, feature_type, save_fig=True)
-        model.save(feature_type)
+        model.save(f"saved_model/{feature_type}")
     finally:
         out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
         out_predict = numpy.argmax(out_predict, axis=1)
         out_true = numpy.argmax(out_test, axis=1)
-        data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, save_fig=True)
+        data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, color_map='GnBu', save_fig=True)
         return
 
 
@@ -114,4 +114,4 @@ if __name__ == "__main__":
     train_and_predict('mel_spec', 512)
 
     # Unmark the command below to plot the confusion matrix for all
-    # plt.show()
+    plt.show()

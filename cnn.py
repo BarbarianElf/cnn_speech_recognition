@@ -21,6 +21,13 @@ def get_early_stop(value_monitored='val_loss', min_delta=0.01, num_of_epochs=10)
     return EarlyStopping(monitor=value_monitored, min_delta=min_delta, patience=num_of_epochs, verbose=1, mode='auto')
 
 
+def get_model(model_type, *args):
+    if model_type == 'mfcc':
+        return get_mfcc_model(*args)
+    if model_type == 'mel_spec':
+        return get_mel_spec_model(*args)
+
+
 def get_mfcc_model(input_shape, num_classes, learning_rate=0.001):
     """
     CNN model architecture for MFCC speaker recognition

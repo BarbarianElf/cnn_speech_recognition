@@ -30,7 +30,7 @@ def plot_confusion_matrix(y_true, y_pred, labels, feature='', color_map='viridis
     ax.set_yticklabels(labels)
     for i, true_label in enumerate(matrix):
         for j, predicted_label in enumerate(true_label):
-            ax.text(j, i, matrix[i, j], ha="center", va="center", color="w")
+            ax.text(j, i, matrix[i, j], ha="center", va="center")
     plt.tick_params(axis=u'both', which=u'both', length=0)
     plt.xlabel("Predicted label")
     plt.ylabel("True label")
