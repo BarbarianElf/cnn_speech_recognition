@@ -8,46 +8,108 @@ Created on January 12th 2021
 import data_utils
 import config
 import cnn
+
+from keras.models import load_model
 import os
 import numpy
 
 
 def get_data(feature_type=None):
     try:
-        x_data, y_data = numpy.load("x_data.npy"), numpy.load("y_data.npy")
-        x_test, y_test = numpy.load("x_test.npy"), numpy.load("y_test.npy")
+        x_data = numpy.load("saved_data/x_data_" + feature_type + ".npy")
+        y_data = numpy.load("saved_data/y_data_" + feature_type + ".npy")
+        x_test = numpy.load("saved_data/x_test_" + feature_type + ".npy")
+        y_test = numpy.load("saved_data/y_test_" + feature_type + ".npy")
     except IOError:
         x_data, x_test, y_data, y_test = data_utils.process_feature(config.FREQUENCY_SAMPLED,
                                                                     config.FRAME_MAX_LEN,
                                                                     feature_type=feature_type,
                                                                     num_for_test=config.NUM_OF_TEST)
         x_data, x_test = data_utils.expand_dim(x_data, x_test)
-    y_data, y_test, _encoder = data_utils.data_encoder_and_categorized(y_data, y_test)
-    x_train, x_valid, y_train, y_valid = data_utils.train_valid_split(x_data, y_data, percent=config.VALID_PERCENT)
-    return x_train, y_train, x_valid, y_valid, x_test, y_test, _encoder
+        # saving to data to files for the next time about 500MB
+        numpy.save("saved_data/x_data_" + feature_type + ".npy", x_data)
+        numpy.save("saved_data/x_test_" + feature_type + ".npy", x_test)
+        numpy.save("saved_data/y_data_" + feature_type + ".npy", y_data)
+        numpy.save("saved_data/y_test_" + feature_type + ".npy", y_test)
+    finally:
+        y_data, y_test, _encoder = data_utils.data_encoder_and_categorized(y_data, y_test)
+        x_train, x_valid, y_train, y_valid = data_utils.train_valid_split(x_data, y_data, percent=config.VALID_PERCENT)
+        return x_train, y_train, x_valid, y_valid, x_test, y_test, _encoder
+
+
+def _check_feature_input(feature_type):
+    if feature_type == 'mfcc':
+        return config.NUM_OF_SPEAKERS
+    elif feature_type == "mel_spec":
+        return config.NUM_OF_WORDS
+    else:
+        raise ValueError('feature_type must be `mfcc` or `mel_spec`')
+
+
+def plot_training_many_batch(feature_type, batch_sizes):
+    history = []
+    graph = ['loss', 'val_loss']
+    num_classes = _check_feature_input(feature_type)
+    in_train, out_train, in_valid, out_valid, in_test, out_test, encoder = get_data(feature_type)
+    for batch_size in batch_sizes:
+        model = cnn.get_mfcc_model(in_train.shape[1:], num_classes, learning_rate=0.001)
+        history.append(model.fit(in_train, out_train,
+                                 batch_size=batch_size,
+                                 epochs=100,
+                                 validation_data=(in_valid, out_valid),
+                                 callbacks=[cnn.get_early_stop()],
+                                 use_multiprocessing=True,
+                                 workers=6))
+    for fig, value in enumerate(graph):
+        plt.figure(fig)
+        for index, trained in enumerate(history):
+            x = range(1, len(trained.history[value]) + 1)
+            plt.plot(x, trained.history[value], label=str(batch_sizes[index]))
+        plt.legend()
+        plt.title(f"{feature_type} Model {value}")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.grid(True, alpha=0.2)
+        plt.savefig(f"results/history_{feature_type}_{value}")
+
+
+def train_and_predict(feature_type, batch_size):
+    in_train, out_train, in_valid, out_valid, in_test, out_test, encoder = get_data(feature_type)
+    labels = encoder.classes_
+    num_classes = _check_feature_input(feature_type)
+    try:
+        model = load_model(f"saved_model/{feature_type}")
+    except IOError:
+        model = cnn.get_mfcc_model(in_train.shape[1:], num_classes, learning_rate=0.001)
+        history = model.fit(in_train, out_train,
+                            batch_size=batch_size,
+                            epochs=100,
+                            validation_data=(in_valid, out_valid),
+                            callbacks=[cnn.get_early_stop()],
+                            use_multiprocessing=True,
+                            workers=6)
+        data_utils.plot_loss(history, feature_type, save_fig=True)
+        model.save(feature_type)
+    finally:
+        out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
+        out_predict = numpy.argmax(out_predict, axis=1)
+        out_true = numpy.argmax(out_test, axis=1)
+        data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, save_fig=True)
+        return
 
 
 if __name__ == "__main__":
     plt = data_utils.get_plt()
     os.makedirs("results", exist_ok=True)
 
-    in_train, out_train, in_valid, out_valid, in_test, out_test, encoder = get_data('mfcc')
-    model = cnn.get_mfcc_model(in_train.shape[1:], config.NUM_OF_SPEAKERS, learning_rate=0.001)
-    history = model.fit(in_train, out_train,
-                        batch_size=800,
-                        epochs=100,
-                        validation_data=(in_valid, out_valid),
-                        callbacks=[cnn.get_early_stop()],
-                        use_multiprocessing=True,
-                        workers=6,)
+    # PLOTS FOR MANY BATCH SIZE
+    # batch = [2**i for i in range(4, 6)]
+    # plot_training_many_batch('mfcc', batch)
+    # plot_training_many_batch('mel_spec', batch)
 
-    out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
-    out_predict = numpy.argmax(out_predict, axis=1)
-    out_true = numpy.argmax(out_test, axis=1)
-    labels = encoder.classes_
+    # TRAIN AND PREDICT WITH THE MOST EFFECTIVE BATCH SIZE
+    train_and_predict('mfcc', 512)
+    train_and_predict('mel_spec', 512)
 
-    data_utils.plot_loss(history)
-    data_utils.plot_confusion_matrix(out_true, out_predict, labels)
-
-    # model = cnn.get_mel_spec_model(in_train.shape[1:], config.NUM_OF_DIGITS, learning_rate=0.001)
-    print("hi")
+    # Unmark the command below to plot the confusion matrix for all
+    # plt.show()

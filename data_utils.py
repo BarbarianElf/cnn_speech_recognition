@@ -17,7 +17,7 @@ def get_plt():
     return plt
 
 
-def plot_confusion_matrix(y_true, y_pred, labels, color_map='viridis'):
+def plot_confusion_matrix(y_true, y_pred, labels, feature='', color_map='viridis', save_fig=False):
     """
     plots the confusion matrix
     """
@@ -34,18 +34,24 @@ def plot_confusion_matrix(y_true, y_pred, labels, color_map='viridis'):
     plt.tick_params(axis=u'both', which=u'both', length=0)
     plt.xlabel("Predicted label")
     plt.ylabel("True label")
-    plt.title("Confusion Matrix")
+    plt.title(f"{feature} Confusion Matrix")
+    if feature == 'mfcc':
+        plt.xticks(rotation='vertical')
+    if save_fig:
+        plt.savefig(f"results/confusion_matrix_{feature}")
 
 
-def plot_loss(trained):
+def plot_loss(trained, feature='', save_fig=False):
     plt.figure(figsize=(10, 7))
     plt.plot(trained.history['loss'], c="darkblue")
     plt.plot(trained.history['val_loss'], c="crimson")
     plt.legend(["Train", "Validation"])
-    plt.title("Model loss")
+    plt.title(f"{feature} Model loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.grid(True, alpha=0.2)
+    if save_fig:
+        plt.savefig(f"results/Model loss_{feature}")
 
 
 def _get_wav_files(dir_path):
