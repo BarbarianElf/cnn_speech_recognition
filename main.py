@@ -92,7 +92,7 @@ def train_and_predict(feature_type, batch_size):
         model.save(f"saved_model/{feature_type}")
     finally:
         # PREDICTION SECTION
-        feature, feature_out, _ = data_utils.file_process_feature(f"5_gabi_25.wav",
+        feature, feature_out, _ = data_utils.file_process_feature(f"7_jackson_2.wav",
                                                                   config.FREQUENCY_SAMPLED,
                                                                   config.FRAME_MAX_LEN,
                                                                   feature_type)
@@ -121,8 +121,8 @@ if __name__ == "__main__":
     # plot_training_many_batch('mel_spec', batch)
 
     # TRAIN AND PREDICT WITH THE MOST EFFECTIVE BATCH SIZE
-    train_and_predict('mfcc', 512)
-    train_and_predict('mel_spec', 512)
+    train_and_predict('mfcc', batch_size=512)
+    train_and_predict('mel_spec', batch_size=512)
 
     # Unmark the command below to plot the confusion matrix for all
     # plt.show()
