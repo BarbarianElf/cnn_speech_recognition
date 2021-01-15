@@ -48,7 +48,8 @@ def _check_feature_input(feature_type):
 
 def plot_training_many_batch(feature_type, batch_sizes):
     history = []
-    graph = ['loss', 'val_loss']
+    # graph = ['loss', 'val_loss']
+    graph = ['accuracy', 'val_accuracy']
     num_classes = _check_feature_input(feature_type)
     in_train, out_train, in_valid, out_valid, in_test, out_test, encoder = get_data(feature_type)
     for batch_size in batch_sizes:
@@ -57,7 +58,7 @@ def plot_training_many_batch(feature_type, batch_sizes):
                                  batch_size=batch_size,
                                  epochs=100,
                                  validation_data=(in_valid, out_valid),
-                                 callbacks=[cnn.get_early_stop()],
+                                 callbacks=[cnn.get_early_stop(value_monitored='val_accuracy')],
                                  use_multiprocessing=True,
                                  workers=6))
     for fig, value in enumerate(graph):
@@ -71,6 +72,7 @@ def plot_training_many_batch(feature_type, batch_sizes):
         plt.ylabel("Loss")
         plt.grid(True, alpha=0.2)
         plt.savefig(f"results/history_{feature_type}_{value}")
+        plt.close(fig)
 
 
 def train_and_predict(feature_type, batch_size):
@@ -116,13 +118,13 @@ if __name__ == "__main__":
     os.makedirs("results", exist_ok=True)
 
     # PLOTS FOR MANY BATCH SIZE
-    # batch = [2**i for i in range(4, 6)]
+    batch = [2**i for i in range(4, 11)]
     # plot_training_many_batch('mfcc', batch)
-    # plot_training_many_batch('mel_spec', batch)
+    plot_training_many_batch('mel_spec', batch)
 
     # TRAIN AND PREDICT WITH THE MOST EFFECTIVE BATCH SIZE
-    train_and_predict('mfcc', batch_size=512)
-    train_and_predict('mel_spec', batch_size=512)
+    # train_and_predict('mfcc', batch_size=512)
+    # train_and_predict('mel_spec', batch_size=512)
 
     # Unmark the command below to plot the confusion matrix for all
     # plt.show()
