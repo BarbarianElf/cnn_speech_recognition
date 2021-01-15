@@ -54,6 +54,28 @@ def plot_loss(trained, feature='', save_fig=False):
         plt.savefig(f"results/Model loss_{feature}")
 
 
+def file_process_feature(file, fs, max_len, feature_type=None):
+    file_name = file.split('.')[0].split('_')
+    word, speaker, index = file_name[0], file_name[1], file_name[2]
+    sound_data, _ = librosa.core.load(config.RECORDING_DIR + file, sr=fs)
+    if feature_type == "mfcc":
+        filter_num = config.MFCC_FILTER_NUM
+        feature = mfcc(sound_data, fs, pre_emphasis=False, dct_filters_num=filter_num, normalized=True)
+        feature_out = speaker
+    elif feature_type == "mel_spec":
+        filter_num = config.MEL_FITER_NUM
+        spectrogram, _ = mel_spectrogram(sound_data, fs, mel_filters=filter_num, normalized=True)
+        feature = power_to_db(spectrogram)
+        feature_out = word
+    else:
+        raise ValueError('feature_type must be `mfcc` or `mel_spec`')
+    if feature.shape[1] < max_len:
+        feature = numpy.pad(feature, ((0, 0), (0, max_len - feature.shape[1])))
+    else:
+        feature = feature[:, :max_len]
+    return feature, feature_out, index
+
+
 def _get_wav_files(dir_path):
     # insert to list all the files with wav extension
     files = []
@@ -66,31 +88,13 @@ def _get_wav_files(dir_path):
 def process_feature(fs, max_len, feature_type=None, num_for_test=5):
     x_data, x_test, y_data, y_test = [], [], [], []
     for file in _get_wav_files(config.RECORDING_DIR):
-        file_name = file.split('.')[0].split('_')
-        word, speaker, index = file_name[0], file_name[1], file_name[2]
-        sound_data, _ = librosa.core.load(config.RECORDING_DIR + file, sr=fs)
-        if feature_type == "mfcc":
-            filter_num = config.MFCC_FILTER_NUM
-            feature = mfcc(sound_data, fs, pre_emphasis=False, dct_filters_num=filter_num, normalized=True)
-            feature_out = speaker
-        elif feature_type == "mel_spec":
-            filter_num = config.MEL_FITER_NUM
-            spectrogram, _ = mel_spectrogram(sound_data, fs, mel_filters=filter_num, normalized=True)
-            feature = power_to_db(spectrogram)
-            feature_out = word
-        else:
-            raise ValueError('feature_type must be `mfcc` or `mel_spec`')
-        if feature.shape[1] < max_len:
-            feature = numpy.pad(feature, ((0, 0), (0, max_len - feature.shape[1])))
-        else:
-            feature = feature[:, :max_len]
+        feature, feature_out, index = file_process_feature(file, fs, max_len, feature_type)
         if int(index) < num_for_test:
             x_test.append(feature)
             y_test.append(feature_out)
         else:
             x_data.append(feature)
             y_data.append(feature_out)
-
     return numpy.array(x_data), numpy.array(x_test), numpy.array(y_data), numpy.array(y_test)
 
 

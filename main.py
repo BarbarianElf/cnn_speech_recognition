@@ -91,10 +91,21 @@ def train_and_predict(feature_type, batch_size):
         data_utils.plot_loss(history, feature_type, save_fig=True)
         model.save(f"saved_model/{feature_type}")
     finally:
-        out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
-        out_predict = numpy.argmax(out_predict, axis=1)
-        out_true = numpy.argmax(out_test, axis=1)
-        data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, color_map='GnBu', save_fig=True)
+        # PREDICTION SECTION
+        feature, feature_out, _ = data_utils.file_process_feature(f"5_gabi_25.wav",
+                                                                  config.FREQUENCY_SAMPLED,
+                                                                  config.FRAME_MAX_LEN,
+                                                                  feature_type)
+        feature = numpy.expand_dims(numpy.expand_dims(feature, axis=-1), axis=0)
+        predict = model.predict(feature)
+        predict = encoder.inverse_transform(numpy.argmax(predict, axis=1))
+        print(f"true: {feature_out}\tprediction: {predict}")
+
+        # Unmark the commands below for run test set and to plot & save confusion matrix
+        # out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
+        # out_predict = numpy.argmax(out_predict, axis=1)
+        # out_true = numpy.argmax(out_test, axis=1)
+        # data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, color_map='GnBu', save_fig=True)
         return
 
 
@@ -114,4 +125,4 @@ if __name__ == "__main__":
     train_and_predict('mel_spec', 512)
 
     # Unmark the command below to plot the confusion matrix for all
-    plt.show()
+    # plt.show()
