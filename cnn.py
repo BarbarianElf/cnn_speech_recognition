@@ -1,15 +1,38 @@
-from keras import Sequential, losses, models, optimizers
+"""
+cnn models file
+for CNN Speech Recognition project
+
+Created on January 12th 2021
+
+@authors: Niv Ben Ami & Ziv Zango
+"""
+from keras import Sequential, losses, optimizers
 from keras.activations import relu, softmax
 from keras.layers import Input, BatchNormalization, Activation, Flatten, Dense, Dropout
 from keras.layers import Conv2D, MaxPool2D, GlobalMaxPooling2D
 from keras.callbacks import EarlyStopping
 
 
-def _save_model_plot(model):
+def _save_model_plot(model, graphivz_path='C:/Program Files (x86)/Graphviz 2.44.1/bin'):
+    """
+    plot Keras model to png
+
+    WARNINGS:
+        please make sure the software graphviz is installed
+        installation instruction: https://graphviz.org/download/
+        WHEN INSTALL MAKE SURE ADDED GRAPHVIZ TO PATH
+        change graphivz_path variable respectively
+        -------
+        please make sure the packages pydot, graphviz are installed
+        install by run the command `pip install pydot graphviz`
+        -------
+        running on WINDOWS, please open PowerShell as Administrator
+        run `dot -c`
+    """
     try:
         from keras.utils.vis_utils import plot_model
         import os
-        os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz 2.44.1/bin'
+        os.environ["PATH"] += os.pathsep + graphivz_path
 
         plot_model(model, to_file=f"results/{model.name}_model.png", show_shapes=True, show_layer_names=True)
     except ImportError as error:

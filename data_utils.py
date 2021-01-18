@@ -1,3 +1,12 @@
+"""
+data utils file
+for CNN Speech Recognition project
+
+Created on January 12th 2021
+
+@authors: Niv Ben Ami & Ziv Zango
+"""
+
 import os
 import librosa
 import numpy
@@ -17,11 +26,11 @@ def get_plt():
     return plt
 
 
-def plot_confusion_matrix(y_true, y_pred, labels, feature='', color_map='viridis', save_fig=False):
+def plot_confusion_matrix(y_true, y_prediction, labels, feature='', color_map='GnBu', save_fig=False):
     """
     plots the confusion matrix
     """
-    matrix = confusion_matrix(y_true, y_pred)
+    matrix = confusion_matrix(y_true, y_prediction)
     fig, ax = plt.subplots(figsize=(12, 10))
     plt.imshow(matrix, cmap=color_map)
     ax.set_xticks(range(len(labels)))
@@ -42,6 +51,9 @@ def plot_confusion_matrix(y_true, y_pred, labels, feature='', color_map='viridis
 
 
 def plot_loss(trained, feature='', save_fig=False):
+    """
+    plot loss and val_loss of the model
+    """
     plt.figure(figsize=(10, 7))
     plt.plot(trained.history['loss'], c="darkblue")
     plt.plot(trained.history['val_loss'], c="crimson")
@@ -55,6 +67,10 @@ def plot_loss(trained, feature='', save_fig=False):
 
 
 def file_process_feature(file, fs, max_len, feature_type=None):
+    """
+    process file into feature (`mfcc`/`mel-spec`)
+    input file with the name {word}_{speaker}_{index}.wav
+    """
     file_name = file.split('.')[0].split('_')
     word, speaker, index = file_name[0], file_name[1], file_name[2]
     sound_data, _ = librosa.core.load(config.RECORDING_DIR + file, sr=fs)
@@ -77,7 +93,9 @@ def file_process_feature(file, fs, max_len, feature_type=None):
 
 
 def _get_wav_files(dir_path):
-    # insert to list all the files with wav extension
+    """
+    list all the files with wav extension in `dir_path`
+    """
     files = []
     for file in os.listdir(dir_path):
         if file.endswith(".wav"):

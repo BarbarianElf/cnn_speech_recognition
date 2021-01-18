@@ -1,17 +1,18 @@
 """
-main file CNN Speech Recognition project
+main file
+for CNN Speech Recognition project
 
 Created on January 12th 2021
 
 @authors: Niv Ben Ami & Ziv Zango
 """
-import data_utils
-import config
-import cnn
-
 from keras.models import load_model
 import os
 import numpy
+
+import data_utils
+import config
+import cnn
 
 
 def get_data(feature_type=None):
@@ -31,10 +32,11 @@ def get_data(feature_type=None):
         numpy.save("saved_data/x_test_" + feature_type + ".npy", x_test)
         numpy.save("saved_data/y_data_" + feature_type + ".npy", y_data)
         numpy.save("saved_data/y_test_" + feature_type + ".npy", y_test)
-    finally:
-        y_data, y_test, _encoder = data_utils.data_encoder_and_categorized(y_data, y_test)
-        x_train, x_valid, y_train, y_valid = data_utils.train_valid_split(x_data, y_data, percent=config.VALID_PERCENT)
-        return x_train, y_train, x_valid, y_valid, x_test, y_test, _encoder
+    except Exception as err:
+        raise Exception(f"Cant read data\n{err}")
+    y_data, y_test, _encoder = data_utils.data_encoder_and_categorized(y_data, y_test)
+    x_train, x_valid, y_train, y_valid = data_utils.train_valid_split(x_data, y_data, percent=config.VALID_PERCENT)
+    return x_train, y_train, x_valid, y_valid, x_test, y_test, _encoder
 
 
 def _check_feature_input(feature_type):
@@ -92,23 +94,24 @@ def train_and_predict(feature_type, batch_size):
                             workers=6)
         data_utils.plot_loss(history, feature_type, save_fig=True)
         model.save(f"saved_model/{feature_type}")
-    finally:
-        # PREDICTION SECTION
-        feature, feature_out, _ = data_utils.file_process_feature(f"7_jackson_2.wav",
-                                                                  config.FREQUENCY_SAMPLED,
-                                                                  config.FRAME_MAX_LEN,
-                                                                  feature_type)
-        feature = numpy.expand_dims(numpy.expand_dims(feature, axis=-1), axis=0)
-        predict = model.predict(feature)
-        predict = encoder.inverse_transform(numpy.argmax(predict, axis=1))
-        print(f"true: {feature_out}\tprediction: {predict}")
+    except Exception as err:
+        raise Exception(f"cant get model\n{err}")
+    # PREDICTION SECTION
+    feature, feature_out, _ = data_utils.file_process_feature(f"7_jackson_2.wav",
+                                                              config.FREQUENCY_SAMPLED,
+                                                              config.FRAME_MAX_LEN,
+                                                              feature_type)
+    feature = numpy.expand_dims(numpy.expand_dims(feature, axis=-1), axis=0)
+    predict = model.predict(feature)
+    predict = encoder.inverse_transform(numpy.argmax(predict, axis=1))
+    print(f"true: {feature_out}\tprediction: {predict}")
 
-        # Unmark the commands below for run test set and to plot & save confusion matrix
-        # out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
-        # out_predict = numpy.argmax(out_predict, axis=1)
-        # out_true = numpy.argmax(out_test, axis=1)
-        # data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, color_map='GnBu', save_fig=True)
-        return
+    # Unmark the commands below for run test set and to plot & save confusion matrix
+    out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
+    out_predict = numpy.argmax(out_predict, axis=1)
+    out_true = numpy.argmax(out_test, axis=1)
+    data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, save_fig=True)
+    return
 
 
 if __name__ == "__main__":
@@ -118,13 +121,13 @@ if __name__ == "__main__":
     os.makedirs("results", exist_ok=True)
 
     # PLOTS FOR MANY BATCH SIZE
-    batch = [2**i for i in range(4, 11)]
+    # batch = [2**i for i in range(4, 11)]
     # plot_training_many_batch('mfcc', batch)
-    plot_training_many_batch('mel_spec', batch)
+    # plot_training_many_batch('mel_spec', batch)
 
     # TRAIN AND PREDICT WITH THE MOST EFFECTIVE BATCH SIZE
-    # train_and_predict('mfcc', batch_size=512)
-    # train_and_predict('mel_spec', batch_size=512)
+    train_and_predict('mfcc', batch_size=512)
+    train_and_predict('mel_spec', batch_size=512)
 
     # Unmark the command below to plot the confusion matrix for all
     # plt.show()
