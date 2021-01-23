@@ -77,7 +77,7 @@ def plot_training_many_batch(feature_type, batch_sizes):
         plt.close(fig)
 
 
-def train_and_predict(feature_type, batch_size):
+def train_and_evaluate(feature_type, batch_size):
     in_train, out_train, in_valid, out_valid, in_test, out_test, encoder = get_data(feature_type)
     labels = encoder.classes_
     num_classes = _check_feature_input(feature_type)
@@ -96,8 +96,19 @@ def train_and_predict(feature_type, batch_size):
         model.save(f"saved_model/{feature_type}")
     except Exception as err:
         raise Exception(f"cant get model\n{err}")
-    # PREDICTION SECTION
-    feature, feature_out, _ = data_utils.file_process_feature(f"7_jackson_2.wav",
+
+    # Unmark the commands below for run test set and to plot & save confusion matrix
+    evaluate = model.evaluate(in_test, out_test)
+    print(f"loss: {round(evaluate[0], 2)}\taccuracy: {round(evaluate[1], 2)}")
+    out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
+    out_predict = numpy.argmax(out_predict, axis=1)
+    out_true = numpy.argmax(out_test, axis=1)
+    data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, save_fig=True)
+    return model, encoder
+
+
+def prediction(model, encoder, audio_file, feature_type):
+    feature, feature_out, _ = data_utils.file_process_feature(audio_file,
                                                               config.FREQUENCY_SAMPLED,
                                                               config.FRAME_MAX_LEN,
                                                               feature_type,
@@ -107,13 +118,6 @@ def train_and_predict(feature_type, batch_size):
     predict = encoder.inverse_transform(numpy.argmax(predict, axis=1))
     print(f"true: {feature_out}\tprediction: {predict}")
 
-    # Unmark the commands below for run test set and to plot & save confusion matrix
-    out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
-    out_predict = numpy.argmax(out_predict, axis=1)
-    out_true = numpy.argmax(out_test, axis=1)
-    data_utils.plot_confusion_matrix(out_true, out_predict, labels, feature_type, save_fig=True)
-    return
-
 
 if __name__ == "__main__":
     plt = data_utils.get_plt()
@@ -121,14 +125,17 @@ if __name__ == "__main__":
     os.makedirs("saved_model", exist_ok=True)
     os.makedirs("results", exist_ok=True)
 
+    features = ['mfcc', 'mel_spec']
+
     # PLOTS FOR MANY BATCH SIZE
     # batch = [2**i for i in range(4, 11)]
-    # plot_training_many_batch('mfcc', batch)
-    # plot_training_many_batch('mel_spec', batch)
+    # for feature in features:
+    #   plot_training_many_batch(feature, batch)
 
     # TRAIN AND PREDICT WITH THE MOST EFFECTIVE BATCH SIZE
-    train_and_predict('mfcc', batch_size=512)
-    train_and_predict('mel_spec', batch_size=512)
+    for audio_feature in features:
+        trained_model, encoder_o = train_and_evaluate(audio_feature, batch_size=512)
+        prediction(trained_model, encoder_o, "6_zango_50.wav", audio_feature)
 
     # Unmark the command below to plot the confusion matrix for all
     # plt.show()
