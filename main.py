@@ -100,7 +100,8 @@ def train_and_predict(feature_type, batch_size):
     feature, feature_out, _ = data_utils.file_process_feature(f"7_jackson_2.wav",
                                                               config.FREQUENCY_SAMPLED,
                                                               config.FRAME_MAX_LEN,
-                                                              feature_type)
+                                                              feature_type,
+                                                              directory=config.PREDICTIONS_DIR)
     feature = numpy.expand_dims(numpy.expand_dims(feature, axis=-1), axis=0)
     predict = model.predict(feature)
     predict = encoder.inverse_transform(numpy.argmax(predict, axis=1))
