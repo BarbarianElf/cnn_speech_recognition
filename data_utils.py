@@ -66,14 +66,14 @@ def plot_loss(trained, feature='', save_fig=False):
         plt.savefig(f"results/Model loss_{feature}")
 
 
-def file_process_feature(file, fs, max_len, feature_type=None):
+def file_process_feature(file, fs, max_len, feature_type=None, directory=config.RECORDING_DIR):
     """
     process file into feature (`mfcc`/`mel-spec`)
     input file with the name {word}_{speaker}_{index}.wav
     """
     file_name = file.split('.')[0].split('_')
     word, speaker, index = file_name[0], file_name[1], file_name[2]
-    sound_data, _ = librosa.core.load(config.RECORDING_DIR + file, sr=fs)
+    sound_data, _ = librosa.core.load(directory + file, sr=fs)
     if feature_type == "mfcc":
         filter_num = config.MFCC_FILTER_NUM
         feature = mfcc(sound_data, fs, pre_emphasis=False, dct_filters_num=filter_num, normalized=True)
