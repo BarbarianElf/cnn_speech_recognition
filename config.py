@@ -8,7 +8,7 @@ Created on January 12th 2021
 """
 # recording directory path
 RECORDING_DIR = "./recordings/"
-
+PREDICTIONS_DIR = "./predictions/"
 # frequency sampled for audio
 FREQUENCY_SAMPLED = 8000
 
@@ -25,6 +25,6 @@ NUM_OF_VALID = NUM_OF_DATA * 0.1
 VALID_PERCENT = NUM_OF_VALID / (NUM_OF_DATA - NUM_OF_TEST)
 
 # speaker and word number for classification
-NUM_OF_SPEAKERS = 40
+NUM_OF_SPEAKERS = 41
 NUM_OF_WORDS = 10
 
