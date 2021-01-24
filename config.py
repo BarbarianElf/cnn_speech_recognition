@@ -25,6 +25,6 @@ NUM_OF_VALID = NUM_OF_DATA * 0.1
 VALID_PERCENT = NUM_OF_VALID / (NUM_OF_DATA - NUM_OF_TEST)
 
 # speaker and word number for classification
-NUM_OF_SPEAKERS = 41
+NUM_OF_SPEAKERS = 40
 NUM_OF_WORDS = 10
 

@@ -63,6 +63,8 @@ def plot_training_many_batch(feature_type, batch_sizes):
                                  callbacks=[cnn.get_early_stop(value_monitored='val_accuracy')],
                                  use_multiprocessing=True,
                                  workers=6))
+        evaluate = model.evaluate(in_test, out_test)
+        print(f"loss: {round(evaluate[0], 4)}\taccuracy: {round(evaluate[1], 4)}")
     for fig, value in enumerate(graph):
         plt.figure(fig)
         for index, trained in enumerate(history):
@@ -99,7 +101,7 @@ def train_and_evaluate(feature_type, batch_size):
 
     # Unmark the commands below for run test set and to plot & save confusion matrix
     evaluate = model.evaluate(in_test, out_test)
-    print(f"loss: {round(evaluate[0], 2)}\taccuracy: {round(evaluate[1], 2)}")
+    print(f"loss: {round(evaluate[0], 4)}\taccuracy: {round(evaluate[1], 4)}")
     out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
     out_predict = numpy.argmax(out_predict, axis=1)
     out_true = numpy.argmax(out_test, axis=1)
@@ -130,12 +132,12 @@ if __name__ == "__main__":
     # PLOTS FOR MANY BATCH SIZE
     # batch = [2**i for i in range(4, 11)]
     # for feature in features:
-    #   plot_training_many_batch(feature, batch)
+    #     plot_training_many_batch(feature, batch)
 
     # TRAIN AND PREDICT WITH THE MOST EFFECTIVE BATCH SIZE
     for audio_feature in features:
-        trained_model, encoder_o = train_and_evaluate(audio_feature, batch_size=512)
-        prediction(trained_model, encoder_o, "6_zango_50.wav", audio_feature)
+        trained_model, encoder_o = train_and_evaluate(audio_feature, batch_size=128)
+        prediction(trained_model, encoder_o, "0_artur_10.wav", audio_feature)
 
     # Unmark the command below to plot the confusion matrix for all
     # plt.show()
