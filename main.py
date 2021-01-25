@@ -99,9 +99,10 @@ def train_and_evaluate(feature_type, batch_size):
     except Exception as err:
         raise Exception(f"cant get model\n{err}")
 
-    # Unmark the commands below for run test set and to plot & save confusion matrix
     evaluate = model.evaluate(in_test, out_test)
     print(f"loss: {round(evaluate[0], 4)}\taccuracy: {round(evaluate[1], 4)}")
+
+    # Unmark the commands below for run test set and to plot & save confusion matrix
     out_predict = model.predict(in_test, use_multiprocessing=True, workers=6, verbose=1)
     out_predict = numpy.argmax(out_predict, axis=1)
     out_true = numpy.argmax(out_test, axis=1)
@@ -117,8 +118,9 @@ def prediction(model, encoder, audio_file, feature_type):
                                                               directory=config.PREDICTIONS_DIR)
     feature = numpy.expand_dims(numpy.expand_dims(feature, axis=-1), axis=0)
     predict = model.predict(feature)
+    predict_chance = numpy.max(predict)
     predict = encoder.inverse_transform(numpy.argmax(predict, axis=1))
-    print(f"true: {feature_out}\tprediction: {predict}")
+    print(f"true: {feature_out}\tprediction: {predict}\t({predict_chance})")
 
 
 if __name__ == "__main__":
@@ -137,7 +139,7 @@ if __name__ == "__main__":
     # TRAIN AND PREDICT WITH THE MOST EFFECTIVE BATCH SIZE
     for audio_feature in features:
         trained_model, encoder_o = train_and_evaluate(audio_feature, batch_size=128)
-        prediction(trained_model, encoder_o, "0_artur_10.wav", audio_feature)
+        prediction(trained_model, encoder_o, "1_realZiv_5.wav", audio_feature)
 
     # Unmark the command below to plot the confusion matrix for all
     # plt.show()
